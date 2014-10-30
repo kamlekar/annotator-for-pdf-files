@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+	    	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	    	<meta name="google" content="notranslate">
+		<link rel="stylesheet" href="resources/css/main.css"/>
+
+		<script src="resources/js/pdfjs/pdf.js"></script>
+		<script src="resources/js/pdfjs/pdf.worker.js"></script>
+		<script src="resources/js/jquery/jquery.js"></script>
+		<script src="resources/js/main.js"></script>
+	</head>
+	<body>
+
+		<div class="body">
+			<canvas id="main" class="pdfcontent"></canvas>
+		</div>
+
+ 		<div class="comment-section-hide">
+		    <div class="comment-section">
+		        <div class="comment-section-wrapper">
+		            <div class="comment-heading">
+		                <div class="severity-section">
+		                    <div class="severity-item s1"></div>
+		                    <div class="severity-item s2"></div>
+		                    <div class="severity-item s3"></div>
+		                </div>
+		                <select class="category">
+		                    <option>Typo</option>
+		                    <option>Padding</option>
+		                    <option>Explain</option>
+		                    <option>Help</option>
+		                </select>
+		            </div>
+		            <div class="comment-text-section">
+		                <textarea class="comment-text"></textarea>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,98 @@
+html, body {
+    padding: 0px;
+    margin: 0px;
+}
+.body {
+    background-color: #CEC;
+    position: relative;
+    z-index: 0;
+}
+.pdfcontent {
+   /* width: 100%;
+    height: 7000px;*/
+}
+.comment-section-hide {
+    display: none;
+}
+.comment-section {
+    width: 300px;
+    border: 1px groove #CCC;
+}
+.comment-heading {
+    background-color: #EEE;
+}
+.severity-section, .category {
+    display: inline-block;
+    vertical-align: top;
+}
+.severity-section {
+    width: 90px;
+}
+.severity-section, .severity-section .severity-item {
+    height: 20px;
+}
+.severity-section .severity-item {
+    width: 30px;
+    float: left;
+}
+.severity-item {
+    position: relative;
+    cursor: pointer;
+}
+.s1 {
+    background-color: red;
+}
+.s2 {
+    background-color: orange;
+}
+.s3 {
+    background-color: green;
+}
+.comment-text {
+    width: 100%;
+    height: 160px;
+    border: none;
+    padding: 0px;
+    margin: 0px;
+    resize: none;
+    display: block;
+}
+.create {
+    background-color: red;
+    display: inline-block;
+    position: absolute;
+    z-index: 1;
+}
+.create:after {
+    content:"";
+    position: absolute;
+    left: -5px;
+    top: -5px;
+    width: 5px;
+    height: 5px;
+    background-color: blue;
+    border-radius: 50%;
+}
+iframe {
+    width: 100%;
+    height: 100%;
+    border: 0
+}
+.tick:after {
+    content:"";
+    width: 5px;
+    height: 5px;
+    background-color: grey;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.shape {
+    position: absolute;
+    background-color: red;
+    opacity: 0.5;
+}
+.shape.round {
+    border-radius: 50%;
+}
