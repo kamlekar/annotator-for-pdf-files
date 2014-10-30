@@ -5,4 +5,4 @@
 
 
 
-To test, please download the files and check using webserver.
+###[Test](https://cdn.rawgit.com/venkateshwar/pdf-annotator/master/index.html)
