@@ -1,19 +1,24 @@
 $(function () {
-    // pdf file downloaded from: http://stlab.adobe.com/wiki/images/d/d3/Test.pdf
-    PDFJS.getDocument('test.pdf').then(function(pdf) {
+    // pdf file downloaded from: https://github.com/mozilla/pdf.js/blob/master/web/compressed.tracemonkey-pldi-09.pdf
+    PDFJS.getDocument('compressed.tracemonkey-pldi-09.pdf').then(function(pdf) {
         // Using promise to fetch the page
-        pdf.getPage(1).then(function(page) {
+
+        function renderPage(page) {
             var scale = 1;
             var viewport = page.getViewport(scale);
-
             //
             // Prepare canvas using PDF page dimensions
             //
-            var canvas = document.getElementById('main');
+            // var canvas = document.getElementById('main');
+            var canvas = document.createElement('canvas');
+            canvas.className = "page " + page.pageIndex;
+            // append the created canvas to the container
+            var body = document.getElementById('pdf-container');
+            body.appendChild(canvas);
+            // Get context of the canvas
             var context = canvas.getContext('2d');
             canvas.height = viewport.height;
             canvas.width = viewport.width;
-
             //
             // Render PDF page into canvas context
             //
@@ -22,7 +27,12 @@ $(function () {
                 viewport: viewport
             };
             page.render(renderContext);
-        });
+        }
+
+        var pages = pdf.pdfInfo.numPages;
+        for(var i = 1; i <= pages; i++){
+            pdf.getPage(i).then(renderPage);
+        }
     });
 
     function setAnnotation(payload){
@@ -46,14 +56,14 @@ $(function () {
             'top': top + setElement.unit
         }).append(commentSection.children()
             .clone(true, true))
-            .appendTo($('.body'));
+            .appendTo($('#pdf-container'));
     }
-    $(document).on('mouseup', '.body', endDrag);
-    $(document).on('mousedown', '.body', beginDrag);
-    $(document).on('mousemove', '.body', startDrag);
+    $(document).on('mouseup', '#pdf-container', endDrag);
+    $(document).on('mousedown', '#pdf-container', beginDrag);
+    $(document).on('mousemove', '#pdf-container', startDrag);
 
     function beginDrag(e) {
-        if (!$(e.target).is('.body, .pdfcontent')) {
+        if (!$(e.target).is('#pdf-container, .page')) {
             return;
         }
         beginDrag.mousedown = true;
@@ -64,7 +74,7 @@ $(function () {
     }
 
     function startDrag(e) {
-        if (!$(e.target).is('.body, .pdfcontent')) {
+        if (!$(e.target).is('#pdf-container, .page')) {
             return;
         }
         if (beginDrag.mousedown) {
@@ -73,10 +83,10 @@ $(function () {
     }
 
     function endDrag(e) {
-        if (!$(e.target).is('.body, .pdfcontent')) {
+        if (!$(e.target).is('#pdf-container, .page')) {
             return;
         }
-        var body = $('.body');
+        var body = $('#pdf-container');
         var width = body.width();
         var height = body.height();
 
@@ -100,7 +110,7 @@ $(function () {
             var left = e.x;
             var top = e.y;
         }
-        var body = $('.body');
+        var body = $('#pdf-container');
         var swidth = body.width();
         var sheight = body.height();
 
@@ -117,7 +127,7 @@ $(function () {
                 'width': Math.abs(drawElement.width) + "px",
                 'height': Math.abs(drawElement.height) + "px"
             })
-            .appendTo($('.body'));
+            .appendTo($('#pdf-container'));
 
     }
     $('.severity-item').click(function () {
