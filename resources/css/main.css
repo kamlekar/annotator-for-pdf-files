@@ -11,6 +11,32 @@ html, body {
     width: 100%;
     /*height: 7000px;*/
 }
+.toolbar{
+    position: fixed;
+    top: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: white;
+}
+.toolbar > div{
+    width: 10px;
+    height: 10px;
+    border: 5px solid #CCC;
+    display: inline-block;
+    padding: 10px;
+}
+.toolbar > div.select{
+    border-style: inset;
+}
+.toolbar > div > div{
+    border: 1px solid green;
+    height: 100%;
+    width: 100%;
+}
+
+.toolbar > .circle > div{
+    border-radius: 50%;
+}
 .comment-section-hide {
     display: none;
 }
@@ -88,6 +114,6 @@ html, body {
     background-color: red;
     opacity: 0.5;
 }
-.shape.round {
+.shape.circle {
     border-radius: 50%;
 }

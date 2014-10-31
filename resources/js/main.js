@@ -1,10 +1,14 @@
 $(function () {
+    var g = {
+        unit: "px",
+        mousedown: false
+    };
     // pdf file downloaded from: https://github.com/mozilla/pdf.js/blob/master/web/compressed.tracemonkey-pldi-09.pdf
     PDFJS.getDocument('compressed.tracemonkey-pldi-09.pdf').then(function(pdf) {
-        // Using promise to fetch the page
 
         function renderPage(page) {
-            var scale = 1;
+            // For clarity, increase scale value
+            var scale = 2.5;
             var viewport = page.getViewport(scale);
             //
             // Prepare canvas using PDF page dimensions
@@ -31,6 +35,7 @@ $(function () {
 
         var pages = pdf.pdfInfo.numPages;
         for(var i = 1; i <= pages; i++){
+            // Using promise to fetch the page
             pdf.getPage(i).then(renderPage);
         }
     });
@@ -46,14 +51,14 @@ $(function () {
     }
 
     function setElement(left, top) {
-        setElement.unit = "px";
+        var unit = g.unit;
         var commentSection = $('.comment-section-hide');
         var div = document.createElement('div');
         div.className = "create";
 
         $(div).css({
-            'left': left + setElement.unit,
-            'top': top + setElement.unit
+            'left': left + unit,
+            'top': top + unit
         }).append(commentSection.children()
             .clone(true, true))
             .appendTo($('#pdf-container'));
@@ -66,10 +71,10 @@ $(function () {
         if (!$(e.target).is('#pdf-container, .page')) {
             return;
         }
-        beginDrag.mousedown = true;
-        beginDrag.firstX = e.pageX;
-        beginDrag.firstY = e.pageY;
-        beginDrag.div = document.createElement('div');
+        g.mousedown = true;
+        g.firstX = e.pageX;
+        g.firstY = e.pageY;
+        g.div = document.createElement('div');
         drawElement(e);
     }
 
@@ -77,32 +82,33 @@ $(function () {
         if (!$(e.target).is('#pdf-container, .page')) {
             return;
         }
-        if (beginDrag.mousedown) {
+        if (g.mousedown) {
             drawElement(e);
         }
     }
 
     function endDrag(e) {
-        if (!$(e.target).is('#pdf-container, .page')) {
-            return;
-        }
+        // if (!$(e.target).is('#pdf-container, .page')) {
+        //     return;
+        // }
         var body = $('#pdf-container');
         var width = body.width();
         var height = body.height();
 
-        var left = beginDrag.firstX - - Math.abs(drawElement.width);//e.pageX;
-        var top = beginDrag.firstY - - Math.abs(drawElement.height);//e.pageY;
+        var left = g.firstX - - Math.abs(g.width);//e.pageX;
+        var top = g.firstY - - Math.abs(g.height);//e.pageY;
         setElement(left, top);
 
-        beginDrag.mousedown = false;
+        g.mousedown = false;
     }
 
     function drawElement(e) {
+        var unit = g.unit;
         if(e.pageX){
             var x = e.pageX;
             var y = e.pageY;
-            var left = beginDrag.firstX;
-            var top = beginDrag.firstY;
+            var left = g.firstX;
+            var top = g.firstY;
         }
         else{
             var x = e.x - - e.width;
@@ -115,17 +121,18 @@ $(function () {
         var sheight = body.height();
 
 
-        drawElement.width = left - x;
-        drawElement.height = top - y;
-        var div = beginDrag.div || document.createElement('div');
-        div.className = "shape round";
+        g.width = left - x;
+        g.height = top - y;
+        var div = g.div || document.createElement('div');
+        div.className = "shape " + $('.toolbar > .select').data('value');
+        console.log(div.className);
         
         $(div)
             .css({
-                'left': left + "px",
-                'top': top + "px",
-                'width': Math.abs(drawElement.width) + "px",
-                'height': Math.abs(drawElement.height) + "px"
+                'left': left + unit,
+                'top': top + unit,
+                'width': Math.abs(g.width) + unit,
+                'height': Math.abs(g.height) + unit
             })
             .appendTo($('#pdf-container'));
 
@@ -133,5 +140,13 @@ $(function () {
     $('.severity-item').click(function () {
         $(this).parent().children().removeClass('tick');
         $(this).addClass('tick');
+    });
+
+    $('.toolbar div').click(function(){
+        $(this).parent().children().removeClass('select');
+        $(this).addClass('select');
+    });
+    $(window).resize(function(){
+        console.log("resize");
     });
 });
