@@ -84,9 +84,11 @@ html, body {
     display: block;
 }
 .create {
-    background-color: red;
+    background-color: rgba(255, 0, 0, 1);
     display: inline-block;
     position: absolute;
+    top: 100%;
+    left: 100%;
     z-index: 1;
 }
 .create:after {
@@ -111,9 +113,17 @@ html, body {
 }
 .shape {
     position: absolute;
+}
+.shape:after{
+    content: "";
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
     background-color: red;
     opacity: 0.5;
 }
-.shape.circle {
+.shape.circle:after {
     border-radius: 50%;
 }

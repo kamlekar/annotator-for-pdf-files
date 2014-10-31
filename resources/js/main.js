@@ -46,7 +46,7 @@ $(function () {
         var width = payload.width;
         var height = payload.height;
         var shape = payload.shape;
-        drawElement(payload);
+        resizeElement(payload);
         setElement(left - - width, top - - height);
     }
 
@@ -55,54 +55,42 @@ $(function () {
         var commentSection = $('.comment-section-hide');
         var div = document.createElement('div');
         div.className = "create";
+        var commentClone = commentSection.children()
+            .clone(true, true);
 
-        $(div).css({
-            'left': left + unit,
-            'top': top + unit
-        }).append(commentSection.children()
-            .clone(true, true))
-            .appendTo($('#pdf-container'));
+
+        $(div).append(commentClone)
+            .appendTo($(g.div));
     }
+    $(document).on('mousedown', '.page', beginDrag);
+    
     $(document).on('mouseup', '#pdf-container', endDrag);
-    $(document).on('mousedown', '#pdf-container', beginDrag);
-    $(document).on('mousemove', '#pdf-container', startDrag);
 
     function beginDrag(e) {
-        if (!$(e.target).is('#pdf-container, .page')) {
-            return;
-        }
+        $(document).on('mousemove', '.page', resizeElement);
         g.mousedown = true;
         g.firstX = e.pageX;
         g.firstY = e.pageY;
         g.div = document.createElement('div');
-        drawElement(e);
-    }
-
-    function startDrag(e) {
-        if (!$(e.target).is('#pdf-container, .page')) {
-            return;
-        }
-        if (g.mousedown) {
-            drawElement(e);
-        }
+        resizeElement(e);
     }
 
     function endDrag(e) {
-        // if (!$(e.target).is('#pdf-container, .page')) {
-        //     return;
-        // }
-        var body = $('#pdf-container');
-        var width = body.width();
-        var height = body.height();
+        if(!$(e.target).hasClass('page') && !$(e.target).hasClass('pdf-container')){
+            bringCommentSectionFront(e);
+            return false;
+        }
 
         var left = g.firstX - - Math.abs(g.width);//e.pageX;
         var top = g.firstY - - Math.abs(g.height);//e.pageY;
         setElement(left, top);
 
         g.mousedown = false;
+        $(document).off('mousemove', '.page');
     }
 
-    function drawElement(e) {
+    function resizeElement(e) {
+        console.log("resizeElement");
         var unit = g.unit;
         if(e.pageX){
             var x = e.pageX;
@@ -123,9 +111,8 @@ $(function () {
 
         g.width = left - x;
         g.height = top - y;
-        var div = g.div || document.createElement('div');
+        var div = g.div = g.div || document.createElement('div');
         div.className = "shape " + $('.toolbar > .select').data('value');
-        console.log(div.className);
         
         $(div)
             .css({
@@ -146,7 +133,20 @@ $(function () {
         $(this).parent().children().removeClass('select');
         $(this).addClass('select');
     });
-    $(window).resize(function(){
-        console.log("resize");
-    });
+
+    function bringCommentSectionFront(e){
+        if(this.prev){
+            $(this.prev).parents('.shape').css({
+                'zIndex': ''
+            });     
+        }
+        this.prev = $(e.target);
+        this.prev.parents('.shape').css({
+            'zIndex': '3'
+        });
+    }
+    
+    // $(window).resize(function(){
+    //     console.log("resize");
+    // });
 });
