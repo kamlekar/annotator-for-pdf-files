@@ -1,6 +1,5 @@
 $(function () {
     var g = {
-        unit: "px",
         mousedown: false
     };
     // pdf file downloaded from: https://github.com/mozilla/pdf.js/blob/master/web/compressed.tracemonkey-pldi-09.pdf
@@ -51,7 +50,6 @@ $(function () {
     }
 
     function setElement(left, top) {
-        var unit = g.unit;
         var commentSection = $('.comment-section-hide');
         var div = document.createElement('div');
         div.className = "create";
@@ -90,8 +88,6 @@ $(function () {
     }
 
     function resizeElement(e) {
-        console.log("resizeElement");
-        var unit = g.unit;
         if(e.pageX){
             var x = e.pageX;
             var y = e.pageY;
@@ -116,13 +112,21 @@ $(function () {
         
         $(div)
             .css({
-                'left': left + unit,
-                'top': top + unit,
-                'width': Math.abs(g.width) + unit,
-                'height': Math.abs(g.height) + unit
+                // 'left': left + unit,
+                // 'top': top + unit,
+                // 'width': Math.abs(g.width) + unit,
+                // 'height': Math.abs(g.height) + unit
+                'left': getPercentageValue(left, swidth),
+                'top': getPercentageValue(top, sheight),
+                'width': getPercentageValue(g.width, swidth),
+                'height': getPercentageValue(g.height, sheight)
             })
             .appendTo($('#pdf-container'));
 
+    }
+
+    function getPercentageValue(value, total){
+        return Math.abs((value/total) * 100) + "%";
     }
     $('.severity-item').click(function () {
         $(this).parent().children().removeClass('tick');
@@ -145,8 +149,4 @@ $(function () {
             'zIndex': '3'
         });
     }
-    
-    // $(window).resize(function(){
-    //     console.log("resize");
-    // });
 });
