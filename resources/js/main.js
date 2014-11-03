@@ -1,14 +1,14 @@
 $(function () {
     var g = {
-        mousedown: false
+        mousedown: false,
+        fileName : 'compressed.tracemonkey-pldi-09.pdf',
+        scale : '2.5'  // for pixelated issues, increase this value
     };
     // pdf file downloaded from: https://github.com/mozilla/pdf.js/blob/master/web/compressed.tracemonkey-pldi-09.pdf
-    PDFJS.getDocument('compressed.tracemonkey-pldi-09.pdf').then(function(pdf) {
+    PDFJS.getDocument(g.fileName).then(function(pdf) {
 
         function renderPage(page) {
-            // For clarity, increase scale value
-            var scale = 2.5;
-            var viewport = page.getViewport(scale);
+            var viewport = page.getViewport(g.scale);
             //
             // Prepare canvas using PDF page dimensions
             //
@@ -65,7 +65,7 @@ $(function () {
     $(document).on('mouseup', '#pdf-container', endDrag);
 
     function beginDrag(e) {
-        $(document).on('mousemove', '.page', resizeElement);
+        $(document).on('mousemove', '#pdf-container', resizeElement);
         g.mousedown = true;
         g.firstX = e.pageX;
         g.firstY = e.pageY;
@@ -84,7 +84,7 @@ $(function () {
         setElement(left, top);
 
         g.mousedown = false;
-        $(document).off('mousemove', '.page');
+        $(document).off('mousemove', '#pdf-container');
     }
 
     function resizeElement(e) {

@@ -5,4 +5,4 @@
 
 
 
-Please download to test. 
+Please download to test. (_Run on a webserver_)
