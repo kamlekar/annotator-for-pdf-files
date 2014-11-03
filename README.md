@@ -5,4 +5,4 @@
 
 
 
-###[Test](https://cdn.rawgit.com/venkateshwar/pdf-annotator/master/index.html)
+Please download to test. 
