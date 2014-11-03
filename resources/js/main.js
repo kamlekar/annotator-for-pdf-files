@@ -50,15 +50,7 @@ $(function () {
     }
 
     function setElement(left, top) {
-        var commentSection = $('.comment-section-hide');
-        var div = document.createElement('div');
-        div.className = "create";
-        var commentClone = commentSection.children()
-            .clone(false, false);
-
-
-        $(div).append(commentClone)
-            .appendTo($(g.div));
+        $('.comment-section-hide > .comment-section').clone(false, false).appendTo($(g.div));
     }
 
     function beginDrag(e) {
