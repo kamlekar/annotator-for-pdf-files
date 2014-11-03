@@ -54,18 +54,16 @@ $(function () {
         var div = document.createElement('div');
         div.className = "create";
         var commentClone = commentSection.children()
-            .clone(true, true);
+            .clone(false, false);
 
 
         $(div).append(commentClone)
             .appendTo($(g.div));
     }
-    $(document).on('mousedown', '.page', beginDrag);
-    
-    $(document).on('mouseup', '#pdf-container', endDrag);
 
     function beginDrag(e) {
         $(document).on('mousemove', '#pdf-container', resizeElement);
+        $(document).on('mouseup', '#pdf-container', endDrag);
         g.mousedown = true;
         g.firstX = e.pageX;
         g.firstY = e.pageY;
@@ -74,17 +72,13 @@ $(function () {
     }
 
     function endDrag(e) {
-        if(!$(e.target).hasClass('page') && !$(e.target).hasClass('pdf-container')){
-            bringCommentSectionFront(e);
-            return false;
-        }
-
-        var left = g.firstX - - Math.abs(g.width);//e.pageX;
-        var top = g.firstY - - Math.abs(g.height);//e.pageY;
+        var left = g.firstX - - Math.abs(g.width);
+        var top = g.firstY - - Math.abs(g.height);
         setElement(left, top);
 
         g.mousedown = false;
         $(document).off('mousemove', '#pdf-container');
+        $(document).off('mouseup', '#pdf-container');
     }
 
     function resizeElement(e) {
@@ -112,41 +106,34 @@ $(function () {
         
         $(div)
             .css({
-                // 'left': left + unit,
-                // 'top': top + unit,
-                // 'width': Math.abs(g.width) + unit,
-                // 'height': Math.abs(g.height) + unit
                 'left': getPercentageValue(left, swidth),
                 'top': getPercentageValue(top, sheight),
                 'width': getPercentageValue(g.width, swidth),
                 'height': getPercentageValue(g.height, sheight)
             })
-            .appendTo($('#pdf-container'));
-
+            .appendTo(body);
     }
 
     function getPercentageValue(value, total){
         return Math.abs((value/total) * 100) + "%";
     }
-    $('.severity-item').click(function () {
+    function bringCommentSectionFront(e){
+        var self = $(this);
+        if(bringCommentSectionFront.prev){
+            bringCommentSectionFront.prev.css({'zIndex': ''});     
+        }
+        self.css({'zIndex': '3'});
+        bringCommentSectionFront.prev = self;
+    }
+    $(document).on('mousedown', '.page', beginDrag);    
+    
+    $(document).on('click', '.severity-item', function () {
         $(this).parent().children().removeClass('tick');
         $(this).addClass('tick');
     });
-
     $('.toolbar div').click(function(){
         $(this).parent().children().removeClass('select');
         $(this).addClass('select');
     });
-
-    function bringCommentSectionFront(e){
-        if(this.prev){
-            $(this.prev).parents('.shape').css({
-                'zIndex': ''
-            });     
-        }
-        this.prev = $(e.target);
-        this.prev.parents('.shape').css({
-            'zIndex': '3'
-        });
-    }
+    $(document).on('click', '.shape', bringCommentSectionFront);
 });
