@@ -2,6 +2,11 @@ html, body {
     padding: 0px;
     margin: 0px;
 }
+.clear-float:after{
+    content: "";
+    display: block;
+    clear: both;
+}
 #pdf-container {
     background-color: #CEC;
     position: relative;
@@ -41,8 +46,11 @@ html, body {
     display: none;
 }
 .comment-section {
-    width: 300px;
+    min-width: 300px;
     display: inline-block;
+    background-color: #eee;
+    padding: 10px;
+    border-radius: 10px;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -52,16 +60,10 @@ html, body {
     margin-left: 14px;
     z-index: 1;
     border-radius: 10px;
-    border: 1px groove #CCC;
+    border: 1px solid #000;
     -webkit-box-shadow: 0px 0px 10px 1px rgba(0,0,0,0.75);
     -moz-box-shadow: 0px 0px 10px 1px rgba(0,0,0,0.75);
     box-shadow: 0px 0px 10px 1px rgba(0,0,0,0.75);
-}
-.comment-section-wrapper{
-    padding: 5px;
-    border-radius: 10px;
-    overflow: hidden;
-    background-color: white;
 }
 .comment-section:before, .comment-section:after{
     content: "";
@@ -77,31 +79,29 @@ html, body {
 }
 .comment-section:after {
     border-width: 13px;
-    border-color: transparent white transparent transparent;
+    border-color: transparent #eee transparent transparent;
 }
 .comment-section:before{
-    border-width: 14px;
-    border-color: transparent black transparent transparent;
+    border-width: 15px;
+    border-color: transparent #000 transparent transparent;
     margin-top: 1px;
+}
+.comment-section-wrapper{
+    overflow: hidden;
 }
 .comment-heading {
     background-color: #EEE;
+    padding: 2px;
 }
 .category {
     float: right;
 }
-.severity-section, .category {
-    display: inline-block;
-    vertical-align: top;
-}
 .severity-section {
-    width: 90px;
-}
-.severity-section, .severity-section .severity-item {
-    height: 20px;
+    float: left;
 }
 .severity-section .severity-item {
     width: 30px;
+    height: 20px;
     float: left;
 }
 .severity-item {
