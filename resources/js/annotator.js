@@ -6,10 +6,9 @@ var annotation = (function () {
         // pdf file downloaded from: https://github.com/mozilla/pdf.js/blob/master/web/compressed.tracemonkey-pldi-09.pdf
         renderAllPages = function(pdf) {
             var pages = pdf.pdfInfo.numPages;
-            var container = document.getElementById('pdf-container');
             for(var i = 1; i <= pages; i++){
                 // Using promise to fetch the page
-                pdf.getPage(i).then(renderPage.bind(container));
+                pdf.getPage(i).then(renderPage.bind(g.container));
             }
         },
         renderPage = function (page) {
@@ -51,8 +50,8 @@ var annotation = (function () {
         beginDrag = function (e) {
             g.shape = $('.toolbar > .select').data('value');
             if(g.shape !== "cursor"){
-                addEvent('#pdf-container', 'mousemove', resizeElement);
-                addEvent('#pdf-container', 'mouseup', endDrag);
+                addEvent(g.container, 'mousemove', resizeElement);
+                addEvent(g.container, 'mouseup', endDrag);
             
                 g.firstX = e.pageX;
                 g.firstY = e.pageY;
@@ -66,8 +65,8 @@ var annotation = (function () {
             var top = g.firstY - - Math.abs(g.height);
             setElement(left, top);
 
-            removeEvent('#pdf-container', 'mousemove');
-            removeEvent('#pdf-container', 'mouseup');
+            removeEvent(g.container, 'mousemove');
+            removeEvent(g.container, 'mouseup');
         },
 
         resizeElement = function (e) {
@@ -83,7 +82,7 @@ var annotation = (function () {
                 var left = e.x;
                 var top = e.y;
             }
-            var container = $('#pdf-container');
+            var container = $(g.container);
             var swidth = container.width();
             var sheight = container.height();
 
@@ -115,10 +114,10 @@ var annotation = (function () {
             bringCommentSectionFront.prev = self;
         },
         addEvent = function(el, event, func){
-            $(document).on(event, el, func);
+            $(document).on(event, (typeof el === "object"?"#" + el.id:el), func);
         },
         removeEvent = function(el, event){
-            $(document).off(event, el);
+            $(document).off(event, (typeof el === "object"?"#" + el.id:el));
         },
         init = function(payload){
             if(payload && typeof payload === "object"){
@@ -126,6 +125,7 @@ var annotation = (function () {
                     g[p] = payload[p];
                 }
             }
+            g.container = document.getElementById('pdf-container');
             paintPdf();
             addEvent('.page', 'mousedown', beginDrag);
             
