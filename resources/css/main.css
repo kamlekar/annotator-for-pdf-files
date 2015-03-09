@@ -60,11 +60,6 @@ html, body {
     border-radius: 10px;
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
-    -webkit-transform: translateY(-50%);
-    -moz-transform: translateY(-50%);
-    left: 100%;
-    margin-left: 14px;
     z-index: 1;
     border-radius: 10px;
     border: 1px solid #000;
@@ -72,26 +67,89 @@ html, body {
     -moz-box-shadow: 0px 0px 10px 1px rgba(0,0,0,0.75);
     box-shadow: 0px 0px 10px 1px rgba(0,0,0,0.75);
 }
-.comment-section:before, .comment-section:after{
+.comment-section.stick-to-top{
+    top: -22px;
+}
+.comment-section.stick-to-top::after, .comment-section.stick-to-top::before{
+    bottom: auto;
+    top: 10px;
+}
+.comment-section-right.stick-to-top, .comment-section-right.stick-to-bottom{
+    transform: translate(0%,0%);
+    -webkit-transform: translate(0%,0%);
+    -moz-transform: translate(0%,0%);
+}
+.comment-section-left.stick-to-top, .comment-section-left.stick-to-bottom{
+    transform: translate(-100%,0%);
+    -webkit-transform: translate(-100%,0%);
+    -moz-transform: translate(-100%,0%);
+}
+.comment-section.stick-to-top::after, .comment-section.stick-to-top::before,
+.comment-section.stick-to-bottom::after, .comment-section.stick-to-bottom::before{
+    transform: translate(0%,0%);
+    -webkit-transform: translate(0%,0%);
+    -moz-transform: translate(0%,0%);
+}
+.comment-section.stick-to-top::after{
+    margin-top: 3px;
+}
+.comment-section.stick-to-bottom{
+    top: auto;
+    bottom: -22px;
+}
+.comment-section.stick-to-bottom::after{
+    bottom: 12px;
+    top: auto;
+}
+.comment-section.stick-to-bottom::before{
+    bottom: 10px;
+    top: auto;
+}
+.comment-section-right{
+    transform: translate(0%,-50%);
+    -webkit-transform: translate(0%,-50%);
+    -moz-transform: translate(0%,-50%);
+    left: 100%;
+    margin-left: 14px;
+}
+.comment-section-left{
+    transform: translate(-100%,-50%);
+    -webkit-transform: translate(-100%,-50%);
+    -moz-transform: translate(-100%,-50%);
+    left: -14px;
+}
+.comment-section::before, .comment-section::after{
     content: "";
     position: absolute;
-    right: 100%;
     bottom: 50%;
     width: 0px;
     height: 0px;
     border-style: solid;
-    transform: translateY(50%);
-    -webkit-transform: translateY(50%);
-    -moz-transform: translateY(50%);
+    transform: translate(0%, 50%);
+    -webkit-transform: translate(0%, 50%);
+    -moz-transform: translate(0%, 50%);
 }
-.comment-section:after {
+.comment-section-right::after {
+    right: 100%;
     border-width: 13px;
     border-color: transparent #eee transparent transparent;
 }
-.comment-section:before{
+.comment-section-right::before{
+    right: 100%;
     border-width: 15px;
     border-color: transparent #000 transparent transparent;
     margin-top: 1px;
+}
+.comment-section-left::before{
+    border-width: 15px;
+    left: 100%;
+    border-color: transparent transparent transparent #000;
+    margin-top: 1px;
+}
+.comment-section-left::after{
+    border-width: 13px;
+    left: 100%;
+    border-color: transparent transparent transparent #eee;   
 }
 .comment-section-wrapper{
     overflow: hidden;
@@ -145,6 +203,16 @@ html, body {
 }
 .shape {
     position: absolute;
+    z-index: 3;
+}
+.shape-wrapper{
+    cursor: pointer;
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    z-index: 2;
 }
 .shape:after{
     content: "";
@@ -153,9 +221,49 @@ html, body {
     top: 0px;
     right: 0px;
     bottom: 0px;
-    background-color: red;
+    background-color: #80DEEA;
     opacity: 0.5;
 }
 .shape.circle:after {
     border-radius: 50%;
+}
+.area-bottom-right-resizer, .area-top-left-resizer, .area-top-right-resizer, .area-bottom-left-resizer{
+    width: 10px;
+    height: 10px;
+    opacity: 0.5;
+    background-color: red;
+    position: absolute;
+    z-index: 1;
+    display: none;
+}
+.area-bottom-right-resizer{
+    right: -5px;
+    bottom: -5px;
+}
+.area-top-right-resizer{
+    top: -5px;
+    right: -5px;
+}
+.area-top-left-resizer{
+    top: -5px;
+    left: -5px;
+}
+.area-bottom-left-resizer{
+    bottom: -5px;
+    left: -5px;
+}
+.area-top-right-resizer, .area-bottom-left-resizer{
+    cursor: nesw-resize;
+}
+.area-bottom-right-resizer, .area-top-left-resizer{
+    cursor: nwse-resize;
+}
+.shape-wrapper:hover .area-bottom-right-resizer,
+.shape-wrapper:hover .area-top-right-resizer,
+.shape-wrapper:hover .area-bottom-left-resizer,
+.shape-wrapper:hover .area-top-left-resizer{
+    display: block;
+}
+.resizer-section{
+    display: none;
 }

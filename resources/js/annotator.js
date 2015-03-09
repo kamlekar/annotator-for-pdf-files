@@ -1,105 +1,165 @@
 var annotation = (function () {
     var g = {
             fileName : 'compressed.tracemonkey-pldi-09.pdf',
-            scale : '2.5'  // for pixelated issues, increase this value,
         },
-        // pdf file downloaded from: https://github.com/mozilla/pdf.js/blob/master/web/compressed.tracemonkey-pldi-09.pdf
-        renderAllPages = function(pdf) {
-            var pages = pdf.pdfInfo.numPages;
-            for(var i = 1; i <= pages; i++){
-                // Using promise to fetch the page
-                pdf.getPage(i).then(renderPage.bind(g.container));
+        paintPdf = function(data) {
+            function loadPDFJS(pid, pageUrl) {
+                PDFJS.workerSrc = 'resources/js/pdfjs/pdf.worker.js';
+                var currentPage = 1;
+                var pages = [];
+                var globalPdf = null;
+                function renderPage(page) {
+                    //
+                    // Prepare canvas using PDF page dimensions
+                    //
+                    // var canvas = document.getElementById('main');
+                    var canvas = document.createElement('canvas');
+                    // Link: http://stackoverflow.com/a/13039183/1577396
+                    // Canvas width should be set to the window's width for appropriate
+                    // scaling factor of the document with respect to the canvas width
+                    var viewport = page.getViewport(window.screen.width / page.getViewport(1.0).width);
+                    canvas.className = "page " + page.pageIndex;
+                    // append the created canvas to the container
+                    
+                    g.container.appendChild(canvas);
+                    // Get context of the canvas
+                    var context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    //
+                    // Render PDF page into canvas context
+                    //
+                    var renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    page.render(renderContext).then(function () {
+                        if (currentPage < globalPdf.numPages) {
+                            pages[currentPage] = canvas;
+                            currentPage++;
+                            globalPdf.getPage(currentPage).then(renderPage);
+                        } else {
+                            // other callback functions
+                            loadAnnotations(data);
+                        }
+                    });
+                }
+                PDFJS.getDocument(g.fileName).then(function (pdf) {
+                    if(!globalPdf){
+                        globalPdf = pdf;
+                    }
+                    pdf.getPage(currentPage).then(renderPage);
+                });
+            }
+            loadPDFJS();
+        },
+
+        loadAnnotations = function (p){
+            var annotations = p.annotations;
+            for(var i=0;i<annotations.length;i++){
+                var annotate = annotations[i];
+                
+                buildElement({
+                    "left": annotate.left,
+                    "top": annotate.top,
+                    "shape": annotate.shape
+                });
+                drawElement({
+                    "width": annotate.width,
+                    "height": annotate.height
+                });
+                setElement();
             }
         },
-        renderPage = function (page) {
-            var viewport = page.getViewport(g.scale);
-            //
-            // Prepare canvas using PDF page dimensions
-            //
-            // var canvas = document.getElementById('main');
-            var canvas = document.createElement('canvas');
-            canvas.className = "page " + page.pageIndex;
-            // append the created canvas to the container
+        makeResizable = function(){
             
-            this.appendChild(canvas);
-            // Get context of the canvas
-            var context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            //
-            // Render PDF page into canvas context
-            //
-            page.render({
-                canvasContext: context,
-                viewport: viewport
-            });
         },
-        paintPdf = function() {
-            PDFJS.getDocument(g.fileName).then(renderAllPages);
+        setElement = function (dimensions) {
+            var $clone = $('.comment-section-hide > .comment-section').clone(false, false);
+            $clone.appendTo($(g.selectedArea));
+            setLayout($clone);
         },
-
-        setAnnotation = function (p){
-            resizeElement(p);
-            setElement(p.x - - p.width, p.y - - p.height);
+        setLayout = function($commentSection){
+            // reset all classes
+            $commentSection.removeClass('comment-section-left')
+                .removeClass('comment-section-right')
+                .removeClass('stick-to-top')
+                .removeClass('stick-to-bottom');
+            // Horizontal alignment
+            if($commentSection.offset().left + $commentSection.width() + $commentSection.parent().width() + 45 > $('#pdf-container').width()){
+                $commentSection.addClass('comment-section-left');
+            }
+            else{
+                $commentSection.addClass('comment-section-right');
+            }
+            // Vertical alignment
+            if($commentSection.offset().top < 0){
+                $commentSection.addClass('stick-to-top');
+            }
+            //  Math.abs($commentSection.position().top)
+            else if($commentSection.offset().top + $commentSection.height() + 20 > $('#pdf-container').height()){
+                $commentSection.addClass('stick-to-bottom');   
+            }
         },
-
-        setElement = function (left, top) {
-            $('.comment-section-hide > .comment-section').clone(false, false).appendTo($(g.div));
+        unsetElement = function(){
+            $(g.selectedArea).remove();
         },
-
         beginDrag = function (e) {
-            g.shape = $('.toolbar > .select').data('value');
-            if(g.shape !== "cursor"){
-                addEvent(g.container, 'mousemove', resizeElement);
-                addEvent(g.container, 'mouseup', endDrag);
-            
-                g.firstX = e.pageX;
-                g.firstY = e.pageY;
-                g.div = document.createElement('div');
-                resizeElement(e);
+            if(e.which === 1){
+                var shape = $('.toolbar > .select').data('value');
+                if(shape !== "cursor"){
+                    addEvent('#pdf-container', 'mousemove', function(e){
+                        drawElement({
+                            "width": g.firstX - e.pageX,
+                            "height": g.firstY - e.pageY
+                        });
+                    });
+                    // addEvent('#pdf-container', 'mouseup', endDrag);
+                    addEvent(window, 'mouseup', endDrag);
+                
+                    g.firstX = e.pageX;
+                    g.firstY = e.pageY;
+                    g.selectedArea = document.createElement('div');
+
+                    buildElement({
+                        "left": g.firstX,
+                        "top": g.firstY,
+                        "shape": shape
+                    });
+                }
             }
         },
 
         endDrag = function (e) {
-            var left = g.firstX - - Math.abs(g.width);
-            var top = g.firstY - - Math.abs(g.height);
-            setElement(left, top);
-
-            removeEvent(g.container, 'mousemove');
-            removeEvent(g.container, 'mouseup');
+            setElement();
+            // Making the selectedArea variable null to be ready for next iteration.
+            g.selectedArea = null;
+            removeEvent('#pdf-container', 'mousemove');
+            removeEvent(window, 'mouseup', endDrag);
         },
+        buildElement = function(p){
+            g.selectedArea = document.createElement('div');
 
-        resizeElement = function (e) {
-            if(e.pageX){
-                var x = e.pageX;
-                var y = e.pageY;
-                var left = g.firstX;
-                var top = g.firstY;
-            }
-            else{
-                var x = e.x - - e.width;
-                var y = e.y - - e.height;
-                var left = e.x;
-                var top = e.y;
-            }
-            var container = $(g.container);
-            var swidth = container.width();
-            var sheight = container.height();
+            $resizerClone = $('.resizer-section > div').clone(false, false);
+            $(g.selectedArea).append($resizerClone);
 
-
-            g.width = left - x;
-            g.height = top - y;
-            var div = g.div = g.div || document.createElement('div');
-            div.className = "shape " + g.shape;
-            
-            $(div)
+            g.selectedArea.className = "shape " + p.shape;
+            $(g.selectedArea).css({
+                'left': getPercentageValue(p.left, $(g.container).width()),
+                'top': getPercentageValue(p.top, $(g.container).height())
+            })
+            // .addClass(p.shape)
+            // .append($resizerClone)
+            .appendTo($(g.container));
+            $(g.selectedArea).on('mousedown', repositionStart);
+            $resizerClone.find('[data-resize]').on('mousedown', resizeStart);
+        },
+        drawElement = function (p) {
+            $(g.selectedArea)
                 .css({
-                    'left': getPercentageValue(left, swidth),
-                    'top': getPercentageValue(top, sheight),
-                    'width': getPercentageValue(g.width, swidth),
-                    'height': getPercentageValue(g.height, sheight)
-                })
-                .appendTo(container);
+                    'width': getPercentageValue(p.width, $(g.container).width()),
+                    'height': getPercentageValue(p.height, $(g.container).height())
+                });
         },
 
         getPercentageValue = function (value, total){
@@ -110,15 +170,118 @@ var annotation = (function () {
             if(bringCommentSectionFront.prev){
                 bringCommentSectionFront.prev.css({'zIndex': ''});     
             }
-            self.css({'zIndex': '3'});
+            self.css({'zIndex': '4'});
             bringCommentSectionFront.prev = self;
         },
         addEvent = function(el, event, func){
-            $(document).on(event, (typeof el === "object"?"#" + el.id:el), func);
+            if(typeof el === "object"){
+                $(window).on(event, func);
+            }
+            else{
+                $(document).on(event, el, func);
+            }
+            // $(el).on(event, func);
         },
-        removeEvent = function(el, event){
-            $(document).off(event, (typeof el === "object"?"#" + el.id:el));
+        removeEvent = function(el, event, func){
+            if(typeof el === "object"){
+                if(func){
+                    $(window).off(event, func);
+                }
+                else{
+                    $(window).off(event);   
+                }
+            }
+            else{
+                if(func){
+                    $(document).off(event, el, func);    
+                }
+                else{
+                    $(document).off(event, el);
+                }
+            }
         },
+        // Start of reposition functions
+        repositionStart = function(e){
+            if(e.target.getAttribute('data-resize')){
+                // e.stopPropagation();
+                return false;
+            }
+            $self = $(this);
+            $(window).on('mousemove', repositionShape);
+            $(window).on('mouseup', repositionEnd);
+            repositionStart.self = $self;
+            repositionStart.offset = {
+                left: e.pageX - $self.offset().left,
+                top: e.pageY - $self.offset().top
+            };
+        },
+        repositionShape = function(e){
+            $self = repositionStart.self;
+            $self.css({
+                'left': e.pageX - repositionStart.offset.left,
+                'top': e.pageY - repositionStart.offset.top
+            });
+            setLayout($self.find('.comment-section'));
+        },
+        repositionEnd = function(e){
+            $(window).off('mousemove');
+            $(window).off('mouseup');
+            repositionStart.self = null;
+        },
+        // End of reposition functions
+
+        // Start of resizing functions       
+        resizeShape = function(e) {
+            var $resizer = resizeStart.self;
+            var $shape = $resizer.parents('.shape');
+            var op = $resizer.data('resize');
+            var offset = $shape.offset();
+            var width = $shape.width();
+            var height = $shape.height();
+            if (op === "br") {
+                $shape.css({
+                    'width': e.pageX - offset.left,
+                        'height': e.pageY - offset.top
+                });
+            } else if (op === "tr") {
+                $shape.css({
+                    'height': height + (offset.top - e.pageY),
+                        'top': e.pageY,
+                        'width': e.pageX - offset.left
+                });
+            } else if (op === "tl") {
+                $shape.css({
+                    'height': height + (offset.top - e.pageY),
+                        'top': e.pageY,
+                        'width': width + (offset.left - e.pageX),
+                        'left': e.pageX
+                });
+            } else if (op === "bl") {
+                $shape.css({
+                    'width': width + (offset.left - e.pageX),
+                        'left': e.pageX,
+                        'height': e.pageY - offset.top
+                });
+            }
+
+            setLayout($shape.find('.comment-section'));
+        },
+
+        resizeEnd = function(e) {
+            $(window).off('mousemove');
+            $(window).off('mouseup');
+            resizeStart.self = null;
+        },
+
+        resizeStart = function(e) {
+            resizeStart.self = $(this);
+            $(window).on('mousemove', resizeShape);
+            $(window).on('mouseup', resizeEnd);
+        },
+
+        //End of resizing functions
+
+
         init = function(payload){
             if(payload && typeof payload === "object"){
                 for(p in payload){
@@ -126,14 +289,14 @@ var annotation = (function () {
                 }
             }
             g.container = document.getElementById('pdf-container');
-            paintPdf();
-            addEvent('.page', 'mousedown', beginDrag);
+            paintPdf(g.data);
             
-            $(document).on('click', '.severity-item', function () {
+            addEvent('.page', 'mousedown', beginDrag);
+            addEvent('.severity-item', 'click', function () {
                 $(this).parent().children().removeClass('tick');
                 $(this).addClass('tick');
             });
-            $('.toolbar div').click(function(){
+            addEvent('.toolbar div', 'click', function(){
                 $(this).parent().children().removeClass('select');
                 $(this).addClass('select');
             });
