@@ -20,6 +20,10 @@ $(function () {
                     ]
                 }
             ]
+        },
+        "afterLoadCallBack": function(){
+            $('.toolbar').show();
+            $('.screenBlocker').fadeOut("slow");
         }
     });
 });
