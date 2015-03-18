@@ -1,6 +1,7 @@
 html, body {
     padding: 0px;
     margin: 0px;
+    background-color: #DCDCDC;
 }
 .clear-float:after{
     content: "";
@@ -10,12 +11,21 @@ html, body {
 #pdf-container {
     position: absolute;
     background-color: #CEC;
-    top: 0;
+    /*top: 0;
     left: 0;
     right: 0;
-    bottom:0;
+    bottom:0; */
     overflow-y: auto;
-    border: 1px solid #E1E1E1;
+    /*border: 1px solid #E1E1E1;*/
+}
+#pdf-container{
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
 }
 .document-viewer{
     position: relative;

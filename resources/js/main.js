@@ -1,5 +1,6 @@
 $(function () {
     annotation.init({
+        "fileName": 'compressed.tracemonkey-pldi-09.pdf',
         "data": {
             "annotations": [
                 {

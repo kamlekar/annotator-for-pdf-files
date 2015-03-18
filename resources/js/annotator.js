@@ -1,11 +1,9 @@
 var annotation = (function () {
     var g = {
-            fileName : 'compressed.tracemonkey-pldi-09.pdf',
             fixed: 30,
-            scrollTop : 0
         },
         paintPdf = function(data) {
-            function loadPDFJS(pid, pageUrl) {
+            function loadPDFJS() {
                 PDFJS.workerSrc = 'resources/js/pdfjs/pdf.worker.js';
                 var currentPage = 1;
                 var pages = [];
@@ -43,6 +41,7 @@ var annotation = (function () {
                             globalPdf.getPage(currentPage).then(renderPage);
                         } else {
                             // other callback functions
+                            resetValues();
                             loadAnnotations(data);
                             systemCallBacks();
                             g.afterLoadCallBack();
@@ -80,7 +79,7 @@ var annotation = (function () {
             g.$container.scroll(function(){
                 g.scrollTop = $(this).scrollTop();
             });
-            $('.page').on('mousedown', beginDrag);
+            $('.page').on('mousedown', beginDraw);
             $('.toolbar div').on('click', function(){
                 $(this).parent().children().removeClass('select');
                 $(this).addClass('select');
@@ -90,6 +89,8 @@ var annotation = (function () {
                 $(this).parent().children().removeClass('tick');
                 $(this).addClass('tick');
             });
+            $(window).resize(resetValues);
+            g.scrollTop = g.$container.scrollTop();
         },
         setElement = function (dimensions) {
             var $clone = $('.comment-section-hide > .comment-section').clone(false, false);
@@ -122,9 +123,6 @@ var annotation = (function () {
                 $commentSection.addClass('stick-to-bottom');   
             }
         },
-        unsetElement = function(){
-            $(g.$selectedArea).remove();
-        },
         getOffsetLeft = function(e){
             // return e.offsetX==undefined?e.originalEvent.layerX:e.offsetX;
             return e.clientX;
@@ -133,24 +131,24 @@ var annotation = (function () {
             return e.clientY;
             // return e.offsetY==undefined?e.originalEvent.layerY:e.offsetY;// + $('.document-viewer')[0].scrollTop;
         },
-        beginDrag = function (e) {
+        beginDraw = function (e) {
             if(e.which === 1){
                 var shape = $('.toolbar > .select').data('value');
                 // Check whether the shape is other than cursor
                 // So that the annotation can happen
                 if(shape !== "cursor"){
-                    g.firstX = e.clientX; //getOffsetLeft(e);
-                    g.firstY = e.clientY + g.scrollTop;//getOffsetTop(e) + e.currentTarget.offsetTop;
+                    g.firstX = e.clientX - g.contentOffset.left; //getOffsetLeft(e);
+                    g.firstY = e.clientY + g.scrollTop - g.contentOffset.top;//getOffsetTop(e) + e.currentTarget.offsetTop;
                     g.$selectedArea = $(document.createElement('div'));
                     g.$selectedArea[0].className = "shape rectangle";
-                    beginDrag.offset = {
+                    beginDraw.offset = {
                         'left': g.firstX,
                         'top': g.firstY
                     };
-                    $(g.$selectedArea).css(beginDrag.offset);
+                    $(g.$selectedArea).css(beginDraw.offset);
                     $(g.$selectedArea).appendTo(g.$container);
-                    $('.page').on('mousemove', moveDrag);
-                    $(window).on('mouseup', endDrag);
+                    $('.page').on('mousemove', moveDraw);
+                    $(window).on('mouseup', endDraw);
                     buildElement({
                         "left": g.firstX,
                         "top": g.firstY,
@@ -159,21 +157,21 @@ var annotation = (function () {
                 }
             }
         },
-        moveDrag = function(e){
-            // var $self = beginDrag.div;
+        moveDraw = function(e){
+            // var $self = beginDraw.div;
             drawElement({
-                'width': getOffsetLeft(e) - beginDrag.offset.left,
-                // 'height': getOffsetTop(e) + e.currentTarget.offsetTop - beginDrag.offset.top
-                'height': getOffsetTop(e) + g.scrollTop - beginDrag.offset.top
+                'width': e.clientX - g.contentOffset.left - beginDraw.offset.left,
+                // 'height': getOffsetTop(e) + e.currentTarget.offsetTop - beginDraw.offset.top
+                'height': e.clientY + g.scrollTop - beginDraw.offset.top - g.contentOffset.top
             });
         },
 
-        endDrag = function (e) {
+        endDraw = function (e) {
             setElement();
             // Making the selectedArea variable null to be ready for next iteration.
             g.$selectedArea = null;
             $('.page').off('mousemove');
-            $(window).off('mouseup', endDrag);
+            $(window).off('mouseup', endDraw);
         },
         buildElement = function(p){
             g.$selectedArea = g.$selectedArea || $(document.createElement('div'));
@@ -183,27 +181,28 @@ var annotation = (function () {
 
             g.$selectedArea[0].className = "shape " + p.shape;
             $(g.$selectedArea).css({
-                'left': getPercentageValue(p.left, g.$container.width()),
-                'top': getPercentageValue(p.top, g.$container.height())
+                'left': getPercentageValue(p.left, true),
+                'top': getPercentageValue(p.top, false)
             })
             // .addClass(p.shape)
             // .append($resizerClone)
-            .appendTo(g.$container);
+            .appendTo(g.$container.children('.document-viewer'));
             $resizerClone.on('mousedown', repositionStart);
             $resizerClone.find('[data-resize]').on('mousedown', resizeStart);
         },
         drawElement = function (p) {
-            // console.log(p.width, p.height);
             $(g.$selectedArea)
                 .css({
-                    'width': getPercentageValue(p.width, g.$container.width()),
-                    'height': getPercentageValue(p.height, g.$container.height())
+                    'width': getPercentageValue(p.width, true),
+                    'height': getPercentageValue(p.height, false)
                 });
         },
 
-        getPercentageValue = function (value, total){
-            // return Math.abs((value/total) * 100) + "%";
-            return Math.abs(value);
+        getPercentageValue = function (value, isWidth){
+            var total = isWidth? g.containerWidth: g.wrapperHeight;
+            return Math.abs((value/total) * 100) + "%";
+            // return value;
+            // return Math.abs(value);
         },
         bringCommentSectionFront = function (e){
             var self = $(this);
@@ -212,33 +211,6 @@ var annotation = (function () {
             }
             self.css({'zIndex': '4'});
             bringCommentSectionFront.prev = self;
-        },
-        addEvent = function(el, event, func){
-            if(typeof el === "object"){
-                $(window).on(event, func);
-            }
-            else{
-                $(document).on(event, el, func);
-            }
-            // $(el).on(event, func);
-        },
-        removeEvent = function(el, event, func){
-            if(typeof el === "object"){
-                if(func){
-                    $(window).off(event, func);
-                }
-                else{
-                    $(window).off(event);   
-                }
-            }
-            else{
-                if(func){
-                    $(document).off(event, el, func);    
-                }
-                else{
-                    $(document).off(event, el);
-                }
-            }
         },
         // Start of reposition functions
         repositionStart = function(e){
@@ -252,18 +224,21 @@ var annotation = (function () {
             repositionStart.commentSection = $self.find('.comment-section');
             repositionStart.blnShow = repositionStart.commentSection.is(':visible');
             repositionStart.self = $self;
+            // repositionStart.offset = {
+            //     left: e.clientX - $self.position().left,
+            //     top : e.clientY - $self.position().top
+            // };
             repositionStart.offset = {
                 left: e.clientX - $self.position().left,
-                top: e.clientY - $self.position().top
-            };
+                top: e.clientY + g.scrollTop - $self.position().top //- g.contentOffset.top
+            }
         },
         repositionShape = function(e){
             $self = repositionStart.self;
             $commentSection = repositionStart.commentSection;
-            var dy = g.scrollTop;
             $self.css({
-                'left': e.clientX - repositionStart.offset.left,
-                'top': e.clientY + dy - repositionStart.offset.top //+ $('.document-viewer')[0].scrollTop
+                'left': getPercentageValue(e.clientX - repositionStart.offset.left, true),
+                'top' : getPercentageValue(e.clientY + g.scrollTop - repositionStart.offset.top, false)
             });
             setLayout($commentSection);
             //
@@ -301,12 +276,12 @@ var annotation = (function () {
         },
         resizeShape = function(e) {
             var $resizer = resizeStart.self;
-            var $shape = $resizer.parents('.shape');
-            var op = $resizer.data('resize');
+            var $shape   = $resizer.parents('.shape');
+            var op       = $resizer.data('resize');
 
-            var offset = $shape.offset();
+            var offset   = $shape.offset();
             var position = $shape.position();
-            var pOffset = g.$container.offset();
+            var pOffset  = g.$container.offset();
 
             var shape = {
                 width: $shape.width(),
@@ -317,57 +292,45 @@ var annotation = (function () {
                 pLeft: position.left
             }
 
-            var scrollTop = g.scrollTop;
+            var offsetLeft = e.pageX;
+            var offsetTop  = e.pageY;
 
-            var offsetLeft = e.clientX; //getOffsetLeft(e);
-            var offsetTop = e.clientY; //getOffsetTop(e);
+            var xUp        = (g.scrollTop + offsetTop - pOffset.top) - shape.pTop;
+            // var xDown      = (offsetLeft - pOffset.left) - shape.pLeft;
+            var xDown      = offsetLeft - pOffset.left - shape.pLeft;
 
+            var width      = offsetLeft - shape.oLeft;
+            var height     = offsetTop  - offset.top;
+
+            var xHeight    = shape.height - xUp;
+            var xWidth     = shape.width  - xDown;
+
+            var xTop       = shape.height === g.fixed ? shape.pTop : (g.scrollTop + offsetTop - pOffset.top);
+            var xLeft      = shape.width  === g.fixed ? shape.pLeft: shape.pLeft + xDown;
 
             if (op === "br") {
                 $shape.css({
-                    'width': offsetLeft - offset.left,
-                    'height': offsetTop - offset.top
+                    'width' : width  ,
+                    'height': height 
                 });
             } else if (op === "tr") {
-                var xHeight = shape.height + (shape.oTop - e.pageY);
-                var xTop = shape.height === g.fixed
-                            ? scrollTop + Math.abs(shape.pTop) 
-                            :e.pageY - pOffset.top + scrollTop - 1;
-                var xWidth = e.pageX - $shape.offset().left;
-
                 $shape.css({
                     'height': xHeight,
-                    'top': xTop,
-                    'width': xWidth
+                    'top'   : xTop   ,
+                    'width' : width  
                 });
             } else if (op === "tl") {
-                var xHeight = shape.height + (shape.oTop - e.pageY);
-                var xTop = shape.height === g.fixed 
-                            ? scrollTop + Math.abs(shape.pTop) 
-                            : e.pageY - pOffset.top + scrollTop - 1;
-                var xWidth = shape.width + (shape.oLeft - e.pageX);
-                var xLeft = shape.width === g.fixed 
-                            ? shape.pLeft 
-                            :e.pageX - pOffset.left - 1;
-
-
                 $shape.css({
                     'height': xHeight,
-                    'top': xTop,
-                    'width': xWidth,
-                    'left': xLeft,
+                    'top'   : xTop   ,
+                    'width' : xWidth ,
+                    'left'  : xLeft  
                 });
             } else if (op === "bl") {
-                var xLeft = shape.width === g.fixed 
-                            ? shape.pLeft
-                            :e.pageX - pOffset.left - 1;
-
-                var xWidth = shape.width + (shape.oLeft - e.pageX);
-                var xHeight = offsetTop - offset.top;
                 $shape.css({
-                    'width': xWidth,
-                    'left': xLeft,
-                    'height': xHeight
+                    'width' : xWidth ,
+                    'left'  : xLeft  ,
+                    'height': height 
                 });
             }
             setLayout($shape.find('.comment-section'));
@@ -376,10 +339,23 @@ var annotation = (function () {
         resizeEnd = function(e) {
             $(window).off('mousemove');
             $(window).off('mouseup');
+            //make values in to percentage
+            var $shape = resizeStart.self.parents('.shape');
+            $shape.css({
+                'left': getPercentageValue($shape.position().left, true),
+                'top': getPercentageValue($shape.position().top, false),
+                'width': getPercentageValue($shape.width(), true),
+                'height': getPercentageValue($shape.height(), false)
+            })
             resizeStart.self = null;
         },
         //End of resizing functions
-
+        resetValues = function(){
+            g.contentOffset = g.$container.offset();
+            g.containerWidth = g.$container.width();
+            g.containerHeight = g.$container.height();
+            g.wrapperHeight = g.$container[0].scrollHeight;
+        },
         init = function(payload){
             if(payload && typeof payload === "object"){
                 for(p in payload){
